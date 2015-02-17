@@ -1,0 +1,79 @@
+<?xml version="1.0"?>
+<project name="Play" default="default" basedir=".">
+
+	
+	<!-- The commons library for conditional logic -->
+	<taskdef resource="net/sf/antcontrib/antlib.xml" />
+
+	<description>
+		Pull down the repository.  If there are changes on the repository not in this local repository then fail.  It is essential that the local repository is in sync with the remote.
+	</description>
+	
+	<!-- Initialise properties -->
+	<target name="init">
+	</target>
+	
+	<!-- Fetch the remote and check that local is in sync -->
+	<target name="fetch-and-check" depends="init" >
+	
+		<exec executable="git" outputproperty="commit.hashes.output" failifexecutionfails="true" errorproperty="">
+			<arg value="log"/>
+			<arg value="--pretty=format:%H"/>
+			<arg value="03.0004..HEAD"/>
+		</exec>
+		
+		<echo>{release}
+	{component}
+		{service}
+			{name}xxxx{/name}
+			{module}
+				{name}xxxx{/name}
+				{version}xxxx{/version}
+				{changes}</echo>
+			
+		<foreach target="release-note-commit-element" list="${commit.hashes.output}" delimiter="${line.separator}" param="commit.hash"/>	
+		
+		<echo>				{/changes}
+			{/module}
+		{/service}
+	{/component}
+{/release}</echo>
+	</target>	
+
+		<!-- Release note element for each commit hash -->
+	<target name="release-note-commit-element">
+		<!-- Get the comment -->
+		<exec executable="git" outputproperty="commit.comment" failifexecutionfails="true" errorproperty="">
+			<arg value="show"/>
+			<arg value="-s"/>
+			<arg value="--format=%s"/>
+			<arg value="${commit.hash}"/>
+		</exec>
+		
+		<!-- Get the author -->
+		<exec executable="git" outputproperty="commit.author" failifexecutionfails="true" errorproperty="">
+			<arg value="show"/>
+			<arg value="-s"/>
+			<arg value="--format=%an"/>
+			<arg value="${commit.hash}"/>
+		</exec>
+		
+		<!-- Get the date -->
+		<exec executable="git" outputproperty="commit.date" failifexecutionfails="true" errorproperty="">
+			<arg value="show"/>
+			<arg value="-s"/>
+			<arg value="--format=%cd"/>
+			<arg value="${commit.hash}"/>
+		</exec>
+		
+		<echo>					{change}
+						{activity}${commit.comment}{/activity}
+						{author}${commit.author}{/author}
+						{date}${commit.date}{/date}
+					{/change}</echo>
+	</target>
+	
+	<!-- The default target -->
+	<target name="default" depends="init,fetch-and-check"/> 
+	
+</project>
